@@ -9,7 +9,7 @@ pydantic>=2.10
 pydantic-settings>=2.3
 
 # Deep web scraping & browser automation
-crawl4ai==0.3.746
+crawl4ai==0.8.6
 
 # Async HTTP client (used in intel.py for breach API calls)
 httpx==0.27.0
