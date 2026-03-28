@@ -15,6 +15,7 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Query
@@ -50,6 +51,23 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 # FastAPI app
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# In-memory pipeline status tracker
+# ---------------------------------------------------------------------------
+
+_pipeline_status: dict[str, dict] = {}
+
+
+def _set_status(domain: str, stage: str, detail: str = "") -> None:
+    _pipeline_status[domain] = {
+        "domain": domain,
+        "stage": stage,
+        "detail": detail,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    logger.info("[status] %s — %s %s", domain, stage, detail)
+
 
 app = FastAPI(
     title="Faro — Attack Surface Management",
@@ -214,6 +232,19 @@ async def health():
     return {"status": "ok", "service": "faro"}
 
 
+@app.get("/status/{domain}", tags=["Assessment"], summary="Check current pipeline stage for a domain")
+async def get_status(domain: str):
+    """
+    Returns the current (or last known) pipeline stage for a domain evaluation.
+    Useful for polling progress while /evaluate is running.
+    """
+    domain = domain.strip().lower().removeprefix("http://").removeprefix("https://").split("/")[0]
+    status = _pipeline_status.get(domain)
+    if not status:
+        raise HTTPException(status_code=404, detail=f"No active or recent evaluation for '{domain}'")
+    return status
+
+
 @app.api_route(
     "/evaluate/{domain}",
     methods=["GET", "POST"],
@@ -245,13 +276,17 @@ async def evaluate_domain(
     pipeline_errors: list[str] = []
 
     logger.info("=== Starting evaluation for %s ===", domain)
+    _set_status(domain, "discovery", "running subfinder + httpx")
 
     # --- Stage 1: Discovery ---
     try:
         discovery: DiscoveryResult = await run_discovery(domain, include_ports=include_ports)
     except Exception as exc:
+        _set_status(domain, "error", f"Discovery failed: {exc}")
         logger.exception("Discovery pipeline failed for %s", domain)
         raise HTTPException(status_code=500, detail=f"Discovery failed: {exc}")
+
+    _set_status(domain, "analysis", f"found {len(discovery.live_hosts)} live hosts, deep-analyzing up to {max_hosts}")
 
     # --- Stage 2: Deep analysis (capped at max_hosts) ---
     urls_to_analyze: list[str] = []
@@ -273,6 +308,7 @@ async def evaluate_domain(
     # --- Stage 3: Threat intelligence ---
     intel_result: Optional[IntelResult] = None
     if include_intel:
+        _set_status(domain, "intel", "querying HIBP + Shodan InternetDB")
         # Collect unique IPs from discovery for InternetDB lookups
         ips = list({
             s.ip for s in discovery.subdomains if s.ip and s.ip != s.host
@@ -285,9 +321,9 @@ async def evaluate_domain(
             pipeline_errors.append(f"Intel error: {exc}")
 
     duration = round(time.monotonic() - start, 2)
+    _set_status(domain, "complete", f"finished in {duration}s")
     logger.info("=== Evaluation complete for %s in %.1fs ===", domain, duration)
 
-    from datetime import datetime, timezone
     return EvaluationReport(
         domain=domain,
         assessed_at=datetime.now(timezone.utc).isoformat(),

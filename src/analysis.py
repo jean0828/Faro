@@ -322,8 +322,10 @@ async def analyze_url(url: str, timeout: int = 30) -> AnalysisResult:
     result.technologies = metadata.get("technologies", [])
 
     # --- Cookies ---
-    if crawl_result.cookies:
-        result.cookie_findings = _analyze_cookies(crawl_result.cookies)
+    # crawl4ai >=0.8.x removed the top-level .cookies attribute; guard with getattr
+    raw_cookies = getattr(crawl_result, "cookies", None)
+    if raw_cookies:
+        result.cookie_findings = _analyze_cookies(raw_cookies)
 
     # --- Links & sensitive paths ---
     all_links = [lk.get("href", "") for lk in (crawl_result.links or {}).get("internal", [])]
