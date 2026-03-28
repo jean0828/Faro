@@ -1,0 +1,33 @@
+# =============================================================================
+# Faro — Python Dependencies
+# =============================================================================
+
+# API Framework
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+pydantic==2.7.1
+pydantic-settings==2.2.1
+
+# Deep web scraping & browser automation
+crawl4ai==0.2.77
+playwright==1.44.0
+
+# Async HTTP client (used in intel.py for breach API calls)
+httpx==0.27.0
+aiohttp==3.9.5
+
+# Data processing & parsing
+beautifulsoup4==4.12.3
+lxml==5.2.1
+tldextract==5.1.2
+
+# Security header analysis
+cryptography==42.0.7
+
+# Structured output / reporting
+rich==13.7.1          # Pretty console output during dev
+jinja2==3.1.4         # HTML report templates (future)
+
+# Utilities
+python-dotenv==1.0.1
+tenacity==8.3.0       # Retry logic for external calls

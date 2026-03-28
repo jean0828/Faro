@@ -1,0 +1,64 @@
+{
+    "name": "Faro - ASM & TPRA Tool",
+    "dockerFile": "../Dockerfile",
+
+    // Forward the FastAPI port to localhost
+    "forwardPorts": [8000],
+    "portsAttributes": {
+        "8000": {
+            "label": "Faro API",
+            "onAutoForward": "openBrowser"
+        }
+    },
+
+    // Run after the container is created
+    "postCreateCommand": "echo '✅ Faro dev container ready. Run: uvicorn src.app:app --reload'",
+
+    // VS Code extensions installed automatically inside the container
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.pylint",
+                "ms-python.black-formatter",
+                "ms-python.isort",
+                "charliermarsh.ruff",
+                "tamasfe.even-better-toml",
+                "redhat.vscode-yaml",
+                "humao.rest-client",
+                "rangav.vscode-thunder-client"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "editor.formatOnSave": true,
+                "editor.defaultFormatter": "ms-python.black-formatter",
+                "[python]": {
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": "explicit"
+                    }
+                },
+                "python.terminal.activateEnvironment": false,
+                "terminal.integrated.defaultProfile.linux": "bash"
+            }
+        }
+    },
+
+    // Mount the host's ~/.config/subfinder for API key persistence (optional)
+    "mounts": [
+        "source=${localEnv:HOME}/.config/subfinder,target=/root/.config/subfinder,type=bind,consistency=cached,readonly"
+    ],
+
+    // Environment variables available inside the container
+    // Populate these in a local .env file (never commit it)
+    "containerEnv": {
+        "FARO_ENV": "development",
+        "LOG_LEVEL": "DEBUG"
+    },
+
+    // Required container features
+    "features": {
+        "ghcr.io/devcontainers/features/git:1": {}
+    },
+
+    "remoteUser": "root"
+}
