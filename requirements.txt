@@ -12,18 +12,18 @@ pydantic-settings>=2.3
 crawl4ai==0.8.6
 
 # Async HTTP client (used in intel.py for breach API calls)
-httpx==0.27.0
-aiohttp==3.9.5
+httpx>=0.27.2
+aiohttp>=3.11.11  # crawl4ai>=0.8.6 requires >=3.11.11
 
 # Data processing & parsing
 beautifulsoup4==4.12.3
 tldextract==5.1.2
 
 # Security header analysis
-cryptography==42.0.7
+cryptography>=45.0.7  # pyOpenSSL>=25.3.0 (via crawl4ai) requires >=45.0.7
 
 # Structured output / reporting
-rich==13.7.1          # Pretty console output during dev
+rich>=13.9.4           # crawl4ai>=0.8.6 requires >=13.9.4
 jinja2==3.1.4         # HTML report templates (future)
 
 # Utilities

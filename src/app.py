@@ -144,7 +144,7 @@ def _summarize_discovery(result: DiscoveryResult) -> list[SubdomainSummary]:
             title=s.title,
             tech=s.tech,
             webserver=s.webserver,
-            cdn=s.cdn,
+            cdn=str(s.cdn) if s.cdn is not None and not isinstance(s.cdn, str) else s.cdn,
         )
         for s in result.subdomains
     ]

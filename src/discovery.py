@@ -17,8 +17,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 import shutil
-import subprocess
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -86,6 +86,16 @@ async def enumerate_subdomains(domain: str, timeout: int = 120) -> list[str]:
     binary = _require_binary("subfinder")
     cmd = [binary, "-d", domain, "-silent", "-json", "-timeout", "30"]
 
+    # subfinder writes its config to $HOME/.config/subfinder on first run.
+    # If that path is read-only (e.g. a devcontainer bind-mount), it crashes.
+    # Use a guaranteed-writable fallback home dir to avoid this.
+    env = os.environ.copy()
+    writable_home = "/tmp/faro-tools-home"
+    os.makedirs(f"{writable_home}/.config/subfinder", exist_ok=True)
+    env.setdefault("HOME", writable_home)
+    if not os.access(os.path.join(os.environ.get("HOME", "/root"), ".config", "subfinder"), os.W_OK):
+        env["HOME"] = writable_home
+
     logger.info("[discovery] Starting passive subdomain enumeration for %s", domain)
 
     try:
@@ -93,8 +103,9 @@ async def enumerate_subdomains(domain: str, timeout: int = 120) -> list[str]:
             *cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
+            env=env,
         )
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        stdout, _stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
     except asyncio.TimeoutError:
         logger.warning("[discovery] subfinder timed out for %s", domain)
         return [domain]

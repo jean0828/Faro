@@ -43,9 +43,12 @@
         }
     },
 
+    // Ensure host directory exists before mounting (avoids "bind source path does not exist" error)
+    "initializeCommand": "mkdir -p ${localEnv:HOME}/.config/subfinder",
+
     // Mount the host's ~/.config/subfinder for API key persistence (optional)
     "mounts": [
-        "source=${localEnv:HOME}/.config/subfinder,target=/root/.config/subfinder,type=bind,consistency=cached,readonly"
+        "source=${localEnv:HOME}/.config/subfinder,target=/root/.config/subfinder,type=bind,consistency=cached"
     ],
 
     // Environment variables available inside the container
