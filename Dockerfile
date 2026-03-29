@@ -64,7 +64,7 @@ RUN set -ex; \
     # httpx — HTTP probing and fingerprinting (overwrites Python httpx CLI intentionally)
     && curl -fsSL "https://github.com/projectdiscovery/httpx/releases/download/${PD_VERSION_HTTPX}/httpx_${PD_VERSION_HTTPX#v}_linux_amd64.zip" \
         -o /tmp/httpx.zip \
-    && unzip -q /tmp/httpx.zip -d /usr/local/bin httpx \
+    && unzip -o -q /tmp/httpx.zip -d /usr/local/bin httpx \
     && chmod +x /usr/local/bin/httpx \
     # naabu — fast port scanner
     && curl -fsSL "https://github.com/projectdiscovery/naabu/releases/download/${PD_VERSION_NAABU}/naabu_${PD_VERSION_NAABU#v}_linux_amd64.zip" \

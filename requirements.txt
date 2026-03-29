@@ -26,6 +26,10 @@ cryptography>=45.0.7  # pyOpenSSL>=25.3.0 (via crawl4ai) requires >=45.0.7
 rich>=13.9.4           # crawl4ai>=0.8.6 requires >=13.9.4
 jinja2==3.1.4         # HTML report templates (future)
 
+# Dashboard (Streamlit frontend)
+streamlit>=1.35.0
+pandas>=2.2.0
+
 # Utilities
 python-dotenv==1.0.1
 tenacity==8.3.0       # Retry logic for external calls
